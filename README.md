@@ -4,7 +4,7 @@
 * Open Weather API
 ### This applicaiton doesn't depend on any backend except the APIs used
 ***
-The Application may show you "For Development Purpose Only Water Mark" which was the result of Unbilled API Usage of Google Maps
+The Application may show you "For Development Purpose Only Water Mark" which was the result of Free API Usage of Google Maps
 ***
 > It uses the live locaiton of the user with the help of ```navigator.geolocation() ``` class available in JavaScript
 

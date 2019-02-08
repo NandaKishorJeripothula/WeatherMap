@@ -16,7 +16,7 @@
         </style>
         <script>
             function locate(){
-               navigator.geolocation.getCurrentPosition(initialize,fail,{timeout:3000})
+               navigator.geolocation.getCurrentPosition(initialize,fail,{time:3000});
             }
             function initialize(position){
                 if(position.coords)
@@ -59,6 +59,25 @@
                         getWeather(location);
                     }
                 }
+                async function getTimeZone(location){
+                    var timeZone=undefined,
+                        key='UJ51XQSP5U1A',
+                        url=`http://api.timezonedb.com/v2.1/get-time-zone?key=${key}&format=json&by=position&lat=${location.lat()}&lng=${location.lng()}`
+                    await fetch(url)
+                    .then( function(response){
+                        return response.json();
+                    })
+                    .then(function (data){
+                        if(data.status=="OK") 
+                            {//console.log(data);
+                            timeZone= data.zoneName;
+                            }
+                        else 
+                            timeZone="404";
+                    })
+                    return timeZone;
+                }
+        
                 function getWeather(location){
                     key="449de63838b85f03e45a2616932ed63c";
                     url=`https://api.openweathermap.org/data/2.5/weather?lat=${location.lat()}&lon=${location.lng()}&units=metric&appid=${key}`
@@ -66,33 +85,49 @@
                         .then(function(response) {
                             return response.json();
                         })
-                        .then(function(data) {
-                            var dateObj = new Date(),
-                                    month = dateObj.getUTCMonth() + 1, //months from 1-12
-                                    day = dateObj.getUTCDate(),
-                                    year = dateObj.getUTCFullYear(),
-                                    hours =dateObj.getHours(),
-                                    minutes =dateObj.getMinutes();
-                                    if(hours<12){
-                                        minutes= minutes +" AM";
-                                        }
-                                    else{
-                                        hours=hours-12;
-                                        minutes=minutes+" PM";
-                                    }
-                                    // changing accrdng to needs
-                                    var d = day + "/" + month + "/" +year + " "+ hours + ":" + minutes;
+                        .then( async function(data) {
+                            var timeZone= await getTimeZone(location);
+
+                            var dateString='',
+                                dateObj=null,
+                                zoneFailure='';
+
+                            if(timeZone=="404"){
+                                //Failed to identify the zone of the marker, then set to the default ( Browswer Time Zone)
+                                dateObj = new Date().toLocaleString("en-US");
+                                zoneFailure=" Error_CHKLOG";
+                                console.log("Zone Identification failed, rendering browser local time");
+                            }
+                            else{
+                                dateObj= new Date().toLocaleString("en-US", {timeZone: timeZone});
+                            }
+                            //For parsing date into month, day, year, reconstruct date obj
+                            //Note : Here the time zone date will be kept but that will be treated as the browser time for the instance 
+                            dateObj= new Date(dateObj);
+                            var month = dateObj.getUTCMonth() + 1, //months from 1-12
+                                day = dateObj.getUTCDate(),
+                                year = dateObj.getUTCFullYear(),
+                                hours =dateObj.getHours(),
+                                minutes =dateObj.getMinutes();
+                            if(hours<12){
+                                minutes= minutes +" AM";
+                                }
+                            else{
+                                hours=hours-12;
+                                minutes=minutes+" PM";
+                            }
+                            // changing accrdng to needs
+                            dateString = day + "/" + month + "/" +year + " "+ hours + ":" + minutes;
+                            
                             infoMessage = `
                             <div styles={'font-weight':200}>
-                                Date & Time : ${d} <br/> <hr>
-                                City Name : <b>${data.name}</b> <br/><hr>
+                                Date & Time : ${dateString+zoneFailure} <br/> <hr>
+                                City Name : <b>${(data.name!='')?(data.name):("Unkown")}</b> <br/><hr>
                                 Weather : <b>${data.weather[0].main}</b><br/>
                                 Temaprature : ${data.main.temp} &#176 C <br/>
                                 Humidity : ${data.main.humidity} &#176 C <br/>
                             </div>
                             `
-
-
                             //'CityName: '+data.name +'<br/> Weather: '+data.weather[0].main+'<br/> Weather Description: '+data.weather[0].description;
                             infowindow.setContent(infoMessage);
                             infowindow.open(map,userMarker);    

@@ -62,7 +62,7 @@
                 async function getTimeZone(location){
                     var timeZone=undefined,
                         key='UJ51XQSP5U1A',
-                        url=`http://api.timezonedb.com/v2.1/get-time-zone?key=${key}&format=json&by=position&lat=${location.lat()}&lng=${location.lng()}`
+                        url=`https://api.timezonedb.com/v2.1/get-time-zone?key=${key}&format=json&by=position&lat=${location.lat()}&lng=${location.lng()}`
                     await fetch(url)
                     .then( function(response){
                         return response.json();
@@ -129,6 +129,7 @@
                             </div>
                             `
                             //'CityName: '+data.name +'<br/> Weather: '+data.weather[0].main+'<br/> Weather Description: '+data.weather[0].description;
+                            infowindow.close(); 
                             infowindow.setContent(infoMessage);
                             infowindow.open(map,userMarker);    
                         });
